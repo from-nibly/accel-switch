@@ -48,6 +48,7 @@ Distributed as-is; no warranty is given.
 *****************************************************************/
 #include "SparkFunLSM9DS1/SparkFunLSM9DS1.h"
 #include "math.h"
+#include "HttpClient/HttpClient.h"
 
 //////////////////////////
 // LSM9DS1 Library Init //
@@ -76,6 +77,19 @@ LSM9DS1 imu;
 // http://www.ngdc.noaa.gov/geomag-web/#declination
 #define DECLINATION -8.58 // Declination (degrees) in Boulder, CO.
 
+HttpClient http;
+
+// Headers currently need to be set at init, useful for API keys etc.
+http_header_t headers[] = {
+    //  { "Content-Type", "application/json" },
+    //  { "Accept" , "application/json" },
+    { "Accept" , "*/*"},
+    { NULL, NULL } // NOTE: Always terminate headers will NULL
+};
+
+http_request_t request;
+http_response_t response;
+
 void setup()
 {
 
@@ -98,8 +112,7 @@ void setup()
                   "work for an out of the box LSM9DS1 " \
                   "Breakout, but may need to be modified " \
                   "if the board jumpers are.");
-    while (1)
-      ;
+    while (1);
   }
 }
 
@@ -117,6 +130,18 @@ void loop()
   Serial.println();
 
   delay(PRINT_SPEED);
+}
+
+void sendEvent(String event, String key) {
+  request.hostname = "maker.ifttt.com";
+  request.port = 80;
+  request.path = "/trigger/" + event + "/with/key/" + key;
+
+  http.get(request, response, headers);
+  Serial.print("response status:");
+  Serial.println(response.status);
+  Serial.print("response body:");
+  Serial.println(response.body);
 }
 
 void printGyro()
